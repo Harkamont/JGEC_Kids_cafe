@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        tr.highlight {
+            background-color: #ffcccc;
+        }
+        .cancel-button {
+            padding: 5px 10px;
+            color: white;
+            background-color: red;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>예약 관리</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>취소</th>
+                <th>예약 ID</th>
+                <th>신청자명</th>
+                <th>참석인원</th>
+                <th>연락처</th>
+                <th>주의사항</th>
+                <th>타임 슬롯</th>
+                <th>예약 날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr class="{% if reservation['예약 날짜'] == today %}highlight{% endif %}">
+                <td>
+                    <form action="{{ url_for('cancel_reservation') }}" method="post" onsubmit="return confirm('정말로 이 예약을 취소하시겠습니까?');">
+                        <input type="hidden" name="reservation_id" value="{{ reservation['예약 ID'] }}">
+                        <button type="submit" class="cancel-button">취소</button>
+                    </form>
+                </td>
+                <td>{{ reservation['예약 ID'] }}</td>
+                <td>{{ reservation['신청자명'] }}</td>
+                <td>{{ reservation['참석인원'] }}</td>
+                <td>{{ reservation['연락처'] }}</td>
+                <td>{{ reservation['주의사항'] }}</td>
+                <td>{{ reservation['타임 슬롯'] }}</td>
+                <td>{{ reservation['예약 날짜'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

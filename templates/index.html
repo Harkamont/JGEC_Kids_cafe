@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>증가교회 키즈 카페 예약</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>증가교회 키즈 카페 예약</h1>
+    <form id="reservation-form">
+        <label for="name">신청자명:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="people">참석인원:</label>
+        <input type="number" id="people" name="people" required>
+
+        <label for="phone">연락처:</label>
+        <input type="tel" id="phone" name="phone" required>
+
+        <label for="agreement">주의사항 동의:</label>
+        <input type="checkbox" id="agreement" name="agreement" required>
+
+        <button type="submit">예약하기</button>
+    </form>
+
+    <div id="message"></div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

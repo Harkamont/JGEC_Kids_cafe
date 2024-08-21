@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 현황</title>
+    <style>
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .reservation-list {
+            margin: 20px 0;
+            text-align: left;
+            display: inline-block;
+        }
+        .reservation-list th, .reservation-list td {
+            padding: 5px 15px;
+            border-bottom: 1px solid #ccc;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        .button.disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>{{ time_slot }} 예약 현황</h2>
+        <table class="reservation-list">
+            <tr>
+                <th>신청자</th>
+                <th>인원</th>
+            </tr>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation['신청자명'] | replace('*', '•') }}</td>
+                <td>{{ reservation['참석인원'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div class="button-container">
+            {% if total_participants < 15 %}
+            <button class="button" onclick="window.location.href='/reserve?date={{ date }}&timeSlot={{ time_slot }}'">예약하기</button>
+            {% else %}
+            <button class="button disabled">예약 불가</button>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

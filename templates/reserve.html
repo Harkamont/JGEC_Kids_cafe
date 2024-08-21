@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 신청</title>
+    <script>
+        function validateForm(maxParticipants) {
+            const selectedParticipants = parseInt(document.getElementById('participants').value);
+            if (selectedParticipants > maxParticipants) {
+                alert(`최대 ${maxParticipants}명만 예약 가능합니다.`);
+                return false;  // 제출 막기
+            }
+            return true;  // 제출 허용
+        }
+    </script>
+</head>
+<body>
+    <h2>{{ time_slot }} 예약하기</h2>
+    <p>현재 예약된 인원: {{ current_participants }}/15</p>
+    <form action="/submit_reservation" method="post" onsubmit="return validateForm({{ 15 - current_participants }})">
+        <input type="hidden" name="time_slot" value="{{ time_slot }}">
+        <input type="hidden" name="date" value="{{ date }}">
+        
+        <label for="name">신청자명:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="participants">참석인원:</label>
+        <select id="participants" name="participants" required>
+            {% for i in range(1, 16 - current_participants) %}
+            <option value="{{ i }}">{{ i }}명</option>
+            {% endfor %}
+        </select><br><br>
+
+        <label for="phone">연락처:</label>
+        <input type="tel" id="phone" name="phone" required><br><br>
+
+        <label for="notice">주의사항:</label>
+        <textarea id="notice" name="notice"></textarea><br><br>
+
+        <button type="submit">예약하기</button>
+    </form>
+</body>
+</html>

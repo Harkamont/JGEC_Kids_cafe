@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 완료</title>
+    <style>
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .confirmation-message {
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+    <script>
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="confirmation-message">
+            <p>예약이 등록 되었습니다.</p>
+            <p>{{ date }}</p>
+            <p>{{ timeSlot }}</p>
+            <p>참가인원 {{ participants }}명</p>
+        </div>
+        <button class="button" onclick="closeWindow()">확인</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 취소</title>
+    <style>
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .input-field {
+            margin-bottom: 15px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>예약 취소</h2>
+        <form action="/process_cancel_reservation_by_user" method="post">
+            <input type="hidden" name="reservation_id" value="{{ reservation_id }}">
+            <div class="input-field">
+                <label for="phone">예약 시 사용한 연락처:</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+            <button type="submit" class="button">취소하기</button>
+        </form>
+    </div>
+</body>
+</html>

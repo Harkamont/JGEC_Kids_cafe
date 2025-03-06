@@ -60,16 +60,17 @@
             color: red;
         }
         .photo-container {
-            width: 100%;
-            height: 300px;
+            width: 80%; /* 사진 컨테이너의 너비를 줄임 (예: 80%로 설정) */
+            max-width: 800px; /* 최대 너비를 설정하여 큰 화면에서도 적절한 크기 유지 */
+            margin: 0 auto; /* 중앙 정렬 */
+            padding-top: 10%; /* 16:9 비율을 유지하기 위한 패딩 */
             background-color: #f0f0f0;
             text-align: center;
-            line-height: 300px;
+            position: relative;
+            overflow: hidden;
             margin-bottom: 20px;
             font-size: 1.5em;
             color: #888;
-            position: relative;
-            overflow: hidden;
         }
         .photo-container img {
             width: 100%;
@@ -98,7 +99,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            setInterval(showNextImage, 3000);  // 3초마다 이미지 전환
+            setInterval(showNextImage, 5000);  // 5초마다 이미지 전환
         });
     </script>
 </head>
@@ -108,7 +109,14 @@
     </div>
 
     <div class="subheader">
-        <h3>아이들을 위한 즐거운 공간</h3>
+        <h3>{{ content.location }}</h3>
+        <p>{{ content.notice1 }}</p>
+        <p>{{ content.notice2 }}</p> 
+        <p>{{ content.notice3 }}</p>
+        <p style="font-size: smaller;">{{ content.contact }}</p>
+        {% if content.additional_notice %}
+        <p style="font-size: smaller; color: #ff6b6b;">{{ content.additional_notice }}</p>
+        {% endif %}
     </div>
 
     <div class="photo-container">
@@ -119,6 +127,7 @@
 
     <div class="reservation-container">
         <h2>예약현황</h2>
+        <p>주일과 월요일 제외한, 아래 표시되는 날짜만 예약할 수 있습니다.<br>같은 날 연속 예약은 불가합니다.</p>
         {% for date, day_name in days %}
         <div class="day-container">
             <div class="day-header">

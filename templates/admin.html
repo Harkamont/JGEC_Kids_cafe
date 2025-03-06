@@ -4,62 +4,351 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 페이지</title>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <!-- FullCalendar JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <style>
-        table {
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        .fc-daygrid-event {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
             width: 100%;
-            border-collapse: collapse;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
         }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
         }
-        tr.highlight {
-            background-color: #ffcccc;
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
         }
-        .cancel-button {
-            padding: 5px 10px;
-            color: white;
-            background-color: red;
-            border: none;
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>예약 관리</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>취소</th>
-                <th>예약 ID</th>
-                <th>신청자명</th>
-                <th>참석인원</th>
-                <th>연락처</th>
-                <th>주의사항</th>
-                <th>타임 슬롯</th>
-                <th>예약 날짜</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for reservation in reservations %}
-            <tr class="{% if reservation['예약 날짜'] == today %}highlight{% endif %}">
-                <td>
-                    <form action="{{ url_for('cancel_reservation') }}" method="post" onsubmit="return confirm('정말로 이 예약을 취소하시겠습니까?');">
-                        <input type="hidden" name="reservation_id" value="{{ reservation['예약 ID'] }}">
-                        <button type="submit" class="cancel-button">취소</button>
-                    </form>
-                </td>
-                <td>{{ reservation['예약 ID'] }}</td>
-                <td>{{ reservation['신청자명'] }}</td>
-                <td>{{ reservation['참석인원'] }}</td>
-                <td>{{ reservation['연락처'] }}</td>
-                <td>{{ reservation['주의사항'] }}</td>
-                <td>{{ reservation['타임 슬롯'] }}</td>
-                <td>{{ reservation['예약 날짜'] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>예약 관리(관리자 전용)</h1>
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('view_reservations') }}" class="download-button">전체 데이터 보기</a>
+        <button id="addReservationBtn" style="margin-left: 20px; padding: 8px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">새 예약 추가</button>
+        <button id="editContentBtn" style="margin-left: 20px; padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">메인페이지 내용 수정</button>
+    </div>
+    <div id="calendar"></div>
+
+    <!-- 예약 수정 모달 -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="modalClose">&times;</span>
+            <h2>예약 수정 및 삭제</h2>
+            <form id="editReservationForm">
+                <input type="hidden" id="reservationId">
+                <label for="name">신청자명:</label>
+                <input type="text" id="name" name="name" required><br><br>
+
+                <label for="participants">참석인원:</label>
+                <input type="number" id="participants" name="participants" required><br><br>
+
+                <label for="phone">연락처:</label>
+                <input type="tel" id="phone" name="phone" required><br><br>
+
+                <label for="notice">주의사항:</label>
+                <textarea id="notice" name="notice"></textarea><br><br>
+                
+                <label for="submitTime">제출 시간:</label>
+                <div id="submitTime" style="margin-bottom: 15px;"></div>
+
+                <button type="button" id="saveButton">저장</button>
+                <button type="button" id="deleteButton">삭제</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 새 예약 추가 모달 -->
+    <div id="addReservationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="addModalClose">&times;</span>
+            <h2>새 예약 추가</h2>
+            <form id="addReservationForm">
+                <label for="add-date">예약 날짜:</label>
+                <input type="date" id="add-date" name="date" required><br><br>
+
+                <label for="add-time-slot">타임 슬롯:</label>
+                <select id="add-time-slot" name="time_slot" required>
+                    <option value="오전 (10~12시)">오전 (10~12시)</option>
+                    <option value="오후 1부 (13~15시)">오후 1부 (13~15시)</option>
+                    <option value="오후 2부 (15~17시)">오후 2부 (15~17시)</option>
+                </select><br><br>
+
+                <label for="add-name">신청자명:</label>
+                <input type="text" id="add-name" name="name" required><br><br>
+
+                <label for="add-participants">참석인원:</label>
+                <input type="number" id="add-participants" name="participants" min="1" max="15" required><br><br>
+
+                <label for="add-phone">연락처:</label>
+                <input type="tel" id="add-phone" name="phone" required><br><br>
+
+                <label for="add-notice">주의사항:</label>
+                <textarea id="add-notice" name="notice"></textarea><br><br>
+
+                <button type="button" id="addSaveButton">예약 추가</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var modal = document.getElementById("eventModal");
+            var addModal = document.getElementById("addReservationModal");
+            var modalClose = document.getElementById("modalClose");
+            var addModalClose = document.getElementById("addModalClose");
+            var saveButton = document.getElementById("saveButton");
+            var deleteButton = document.getElementById("deleteButton");
+            var addReservationBtn = document.getElementById("addReservationBtn");
+            var addSaveButton = document.getElementById("addSaveButton");
+
+            // 새 예약 추가 버튼 클릭 시 모달 표시
+            addReservationBtn.onclick = function() {
+                // 날짜 필드에 오늘 날짜 기본값 설정
+                var today = new Date();
+                var dateString = today.toISOString().split('T')[0];
+                document.getElementById('add-date').value = dateString;
+                
+                addModal.style.display = "block";
+            }
+
+            // 새 예약 모달 닫기
+            addModalClose.onclick = function() {
+                addModal.style.display = "none";
+            }
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'ko',  // 한국어 설정
+                events: {{ events|tojson }},  // Flask에서 전달된 이벤트 데이터 로드
+                dayMaxEventRows: true,  // 각 날짜 칸에 최대 이벤트 수 제한
+                eventClick: function(info) {
+                    // 이벤트 클릭 시 모달 표시 및 데이터 채우기
+                    var event = info.event;
+                    document.getElementById('reservationId').value = event.id;
+                    document.getElementById('name').value = event.title.split(' (')[0];
+                    document.getElementById('participants').value = event.title.match(/\((\d+)명\)/)[1];
+                    document.getElementById('phone').value = event.extendedProps.contact;
+                    document.getElementById('notice').value = event.extendedProps.notice || '';
+                    document.getElementById('submitTime').textContent = event.extendedProps.submit_time || '기록 없음';
+                    modal.style.display = "block";
+                }
+            });
+
+            // 모달 닫기
+            modalClose.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // 새 예약 추가 저장
+            addSaveButton.onclick = function() {
+                var date = document.getElementById('add-date').value;
+                var timeSlot = document.getElementById('add-time-slot').value;
+                var name = document.getElementById('add-name').value;
+                var participants = document.getElementById('add-participants').value;
+                var phone = document.getElementById('add-phone').value;
+                var notice = document.getElementById('add-notice').value;
+
+                fetch('/admin_add_reservation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date: date,
+                        time_slot: timeSlot,
+                        name: name,
+                        participants: participants,
+                        phone: phone,
+                        notice: notice
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('새 예약이 추가되었습니다.');
+                        addModal.style.display = "none";
+                        calendar.refetchEvents();  // 이벤트 다시 로드
+                        // 폼 초기화
+                        document.getElementById('addReservationForm').reset();
+                    } else {
+                        response.text().then(errorMsg => {
+                            alert('예약 추가에 실패했습니다: ' + errorMsg);
+                        });
+                    }
+                });
+            };
+
+            // 예약 수정 저장
+            saveButton.onclick = function() {
+                var id = document.getElementById('reservationId').value;
+                var name = document.getElementById('name').value;
+                var participants = document.getElementById('participants').value;
+                var phone = document.getElementById('phone').value;
+                var notice = document.getElementById('notice').value;
+
+                fetch('/edit_reservation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reservation_id: id,
+                        name: name,
+                        participants: participants,
+                        phone: phone,
+                        notice: notice
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('예약이 수정되었습니다.');
+                        modal.style.display = "none";
+                        calendar.refetchEvents();  // 이벤트 다시 로드
+                    } else {
+                        alert('예약 수정에 실패했습니다.');
+                    }
+                });
+            };
+
+            // 예약 삭제
+            deleteButton.onclick = function() {
+                var id = document.getElementById('reservationId').value;
+
+                if (confirm('정말로 이 예약을 삭제하시겠습니까?')) {
+                    fetch('/cancel_reservation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reservation_id: id })
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('예약이 삭제되었습니다.');
+                            modal.style.display = "none";
+                            calendar.refetchEvents();  // 이벤트 다시 로드
+                        } else {
+                            alert('예약 삭제에 실패했습니다.');
+                        }
+                    });
+                }
+            };
+
+            calendar.render();
+            
+            // 메인페이지 내용 수정 모달
+            const contentModal = document.getElementById("contentModal");
+            const editContentBtn = document.getElementById("editContentBtn");
+            const contentModalClose = document.getElementById("contentModalClose");
+            const editContentForm = document.getElementById("editContentForm");
+            
+            // 메인페이지 내용 수정 버튼 클릭 이벤트
+            editContentBtn.addEventListener("click", function() {
+                contentModal.style.display = "block";
+            });
+            
+            // 닫기 버튼 클릭 이벤트
+            contentModalClose.addEventListener("click", function() {
+                contentModal.style.display = "none";
+            });
+            
+            // 콘텐츠 수정 폼 제출 이벤트
+            editContentForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    location: document.getElementById("location").value,
+                    notice1: document.getElementById("notice1").value,
+                    notice2: document.getElementById("notice2").value,
+                    notice3: document.getElementById("notice3").value,
+                    contact: document.getElementById("contact").value,
+                    additional_notice: document.getElementById("additional_notice").value
+                };
+                
+                // API 호출하여 콘텐츠 업데이트
+                fetch('/update_site_content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("메인페이지 내용이 수정되었습니다.");
+                        contentModal.style.display = "none";
+                    } else {
+                        response.text().then(text => {
+                            alert("오류가 발생했습니다: " + text);
+                        });
+                    }
+                })
+                .catch(error => {
+                    alert("오류가 발생했습니다: " + error);
+                });
+            });
+        });
+    </script>
+    
+    <!-- 메인페이지 내용 수정 모달 -->
+    <div id="contentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="contentModalClose">&times;</span>
+            <h2>메인페이지 내용 수정</h2>
+            <form id="editContentForm">
+                <label for="location">장소:</label>
+                <input type="text" id="location" name="location" value="{{ content.location }}" required><br><br>
+
+                <label for="notice1">안내 문구 1:</label>
+                <input type="text" id="notice1" name="notice1" value="{{ content.notice1 }}" required><br><br>
+
+                <label for="notice2">안내 문구 2:</label>
+                <input type="text" id="notice2" name="notice2" value="{{ content.notice2 }}" required><br><br>
+
+                <label for="notice3">안내 문구 3:</label>
+                <input type="text" id="notice3" name="notice3" value="{{ content.notice3 }}" required><br><br>
+
+                <label for="contact">연락처 안내:</label>
+                <input type="text" id="contact" name="contact" value="{{ content.contact }}" required><br><br>
+
+                <label for="additional_notice">추가 공지 (선택사항):</label>
+                <input type="text" id="additional_notice" name="additional_notice" value="{{ content.additional_notice|default('') }}"><br><br>
+
+                <button type="submit">저장</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

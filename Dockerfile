@@ -17,5 +17,4 @@ COPY . .
 ENV FLASK_APP=app.py
 
 # Flask 서버 실행
-CMD ["flask", "run", "--host=0.0.0.0"]
-`
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000", "--no-debugger", "--no-reload"]

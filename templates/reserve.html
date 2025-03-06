@@ -4,41 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 신청</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .warning-section {
+            margin-bottom: 20px;
+            color: #d9534f;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .submit-button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .submit-button:hover {
+            background-color: #218838;
+        }
+        #phone-error {
+            color: red;
+            display: none;
+        }
+    </style>
     <script>
-        function validateForm(maxParticipants) {
-            const selectedParticipants = parseInt(document.getElementById('participants').value);
-            if (selectedParticipants > maxParticipants) {
-                alert(`최대 ${maxParticipants}명만 예약 가능합니다.`);
-                return false;  // 제출 막기
+        function validatePhoneNumber() {
+            const phoneInput = document.getElementById("phone");
+            const errorMessage = document.getElementById("phone-error");
+
+            // 전화번호에 숫자 외의 문자가 포함되었는지 확인
+            if (!/^\d*$/.test(phoneInput.value)) {
+                errorMessage.style.display = "inline";  // 오류 메시지 표시
+            } else {
+                errorMessage.style.display = "none";  // 오류 메시지 숨김
             }
-            return true;  // 제출 허용
         }
     </script>
 </head>
 <body>
-    <h2>{{ time_slot }} 예약하기</h2>
-    <p>현재 예약된 인원: {{ current_participants }}/15</p>
-    <form action="/submit_reservation" method="post" onsubmit="return validateForm({{ 15 - current_participants }})">
-        <input type="hidden" name="time_slot" value="{{ time_slot }}">
-        <input type="hidden" name="date" value="{{ date }}">
-        
-        <label for="name">신청자명:</label>
-        <input type="text" id="name" name="name" required><br><br>
+    <div class="container">
+        <h2>{{ time_slot }} 예약하기</h2>
+        <p>현재 예약된 인원: {{ current_participants }}/15</p>
+        <form action="/submit_reservation" method="post" onsubmit="return validateForm({{ 15 - current_participants }})">
+            <input type="hidden" name="time_slot" value="{{ time_slot }}">
+            <input type="hidden" name="date" value="{{ date }}">
 
-        <label for="participants">참석인원:</label>
-        <select id="participants" name="participants" required>
-            {% for i in range(1, 16 - current_participants) %}
-            <option value="{{ i }}">{{ i }}명</option>
-            {% endfor %}
-        </select><br><br>
+            <label for="name">신청자명:</label>
+            <input type="text" id="name" name="name" required>
 
-        <label for="phone">연락처:</label>
-        <input type="tel" id="phone" name="phone" required><br><br>
+            <label for="participants">참석인원(아이들만):</label>
+            <select id="participants" name="participants" required>
+                {% for i in range(1, 16 - current_participants) %}
+                <option value="{{ i }}">{{ i }}명</option>
+                {% endfor %}
+            </select>
 
-        <label for="notice">주의사항:</label>
-        <textarea id="notice" name="notice"></textarea><br><br>
+            <label for="phone">연락처:</label>
+            <input type="tel" id="phone" name="phone" required oninput="validatePhoneNumber()">
+            <span id="phone-error">전화번호는 숫자만 입력해주세요</span>
 
-        <button type="submit">예약하기</button>
-    </form>
+            <label for="notice">참고사항:</label>
+            <textarea id="notice" name="notice" placeholder="아이들과 관련된 참고사항을 적어주세요."></textarea>
+
+            <label for="warnings">주의사항:</label>
+            <div class="warning-section">
+                <p>1. 외부인도 사용 가능하지만, 선착순 신청을 해야만 이용하는 것은 동일합니다.</p>
+                <p>2. 최대 수용 인원은 15명입니다.</p>
+                <p>3. 부모님과 반드시 동반해야 합니다.<br>* 무료로 운영하고 있기에 키즈존 내에 상주하는 안전요원이 없습니다. 부모님께서 아이들을 계속 지켜보셔야 합니다.</p> 
+                <p>4. 키즈 카페 내 비치된 안전 수칙을 꼭 지켜주세요!</p>
+                <p>5. <strong>당일 예약은 불가능합니다.</strong> 최소 하루 전에 예약해주세요.</p>
+                <p>놀이 시 일어나는 안전사고에 대한 책임은 보호자에게 있으므로 안전하게 놀이할 수 있도록 지도해주시기 바랍니다.</p>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="agreement" name="agreement" required>
+                <label for="agreement">주의사항 및 예약을 위한 개인정보 수집에 동의합니다.</label>
+            </div>
+
+            <button type="submit" class="submit-button">예약하기</button>
+        </form>
+    </div>
 </body>
 </html>

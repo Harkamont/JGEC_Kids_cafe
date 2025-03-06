@@ -30,9 +30,9 @@
             background-color: #007bff;
             color: white;
         }
-        .button.disabled {
-            background-color: grey;
-            cursor: not-allowed;
+        .cancel-button {
+            background-color: #dc3545;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -43,22 +43,39 @@
             <tr>
                 <th>신청자</th>
                 <th>인원</th>
+                <th>취소</th>
             </tr>
             {% for reservation in reservations %}
             <tr>
                 <td>{{ reservation['신청자명'] | replace('*', '•') }}</td>
                 <td>{{ reservation['참석인원'] }}</td>
+                <td>
+                    <button class="button cancel-button" onclick="openCancelPopup('{{ reservation['예약 ID'] }}')">취소</button>
+                </td>
             </tr>
             {% endfor %}
         </table>
 
         <div class="button-container">
             {% if total_participants < 15 %}
-            <button class="button" onclick="window.location.href='/reserve?date={{ date }}&timeSlot={{ time_slot }}'">예약하기</button>
+                {% set today = now().strftime('%Y-%m-%d') %}
+                {% if date == today %}
+                <button class="button disabled" style="background-color: #6c757d;" disabled>당일 예약 불가</button>
+                {% else %}
+                <button class="button" onclick="window.location.href='/reserve?date={{ date }}&timeSlot={{ time_slot }}'">예약하기</button>
+                {% endif %}
             {% else %}
-            <button class="button disabled">예약 불가</button>
+            <button class="button disabled" style="background-color: #6c757d;" disabled>예약 불가</button>
             {% endif %}
         </div>
     </div>
+
+    <script>
+        function openCancelPopup(reservationId) {
+            const url = `/cancel_reservation_by_user?reservationId=${reservationId}`;
+            window.open(url, 'cancelWindow', 'width=400,height=300,scrollbars=yes');
+        }
+    </script>
+    
 </body>
 </html>

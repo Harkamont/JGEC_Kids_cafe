@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 예약 보기</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        .download-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>전체 예약 보기</h1>
+    <a href="{{ url_for('download_reservations') }}" class="download-button">CSV 파일 다운로드</a>
+    <table>
+        <thead>
+            <tr>
+                <th>예약 ID</th>
+                <th>신청자명</th>
+                <th>참석인원</th>
+                <th>연락처</th>
+                <th>주의사항</th>
+                <th>타임 슬롯</th>
+                <th>예약 날짜</th>
+                <th>제출 시간</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation['예약 ID'] }}</td>
+                <td>{{ reservation['신청자명'] }}</td>
+                <td>{{ reservation['참석인원'] }}</td>
+                <td>{{ reservation['연락처'] }}</td>
+                <td>{{ reservation['주의사항'] }}</td>
+                <td>{{ reservation['타임 슬롯'] }}</td>
+                <td>{{ reservation['예약 날짜'] }}</td>
+                <td>{{ reservation['제출 시간'] if '제출 시간' in reservation else '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

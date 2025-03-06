@@ -25,17 +25,21 @@
     </style>
     <script>
         function closeWindow() {
-            window.close();
+            if (window.opener) {
+                window.opener.location.reload();  // 부모 창(메인 페이지) 리프레시
+            }
+            window.close();  // 현재 창 닫기
         }
     </script>
 </head>
 <body>
     <div class="container">
         <div class="confirmation-message">
-            <p>예약이 등록 되었습니다.</p>
+            <p>예약이 완료되었습니다.</p>
             <p>{{ date }}</p>
             <p>{{ timeSlot }}</p>
             <p>참가인원 {{ participants }}명</p>
+            <p>예약 취소는 예약 현황에서 입력하신 전화번호를 통해 가능합니다.</p>
         </div>
         <button class="button" onclick="closeWindow()">확인</button>
     </div>

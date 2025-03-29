@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 신청</title>
     <style>
+        /* 기존 스타일 코드는 그대로 유지 */
         body {
             font-family: Arial, sans-serif;
         }
@@ -40,7 +41,7 @@
         }
         .warning-section {
             margin-bottom: 20px;
-            color: #d9534f;
+            color: #d9534f; /* 좀 더 부드러운 빨간색 */
         }
         .checkbox-container {
             display: flex;
@@ -65,19 +66,32 @@
         #phone-error {
             color: red;
             display: none;
+            font-size: 0.9em; /* 오류 메시지 크기 약간 조정 */
         }
     </style>
     <script>
         function validatePhoneNumber() {
             const phoneInput = document.getElementById("phone");
             const errorMessage = document.getElementById("phone-error");
+            const phoneValue = phoneInput.value.replace(/-/g, ''); // 하이픈 제거
 
-            // 전화번호에 숫자 외의 문자가 포함되었는지 확인
-            if (!/^\d*$/.test(phoneInput.value)) {
-                errorMessage.style.display = "inline";  // 오류 메시지 표시
+            // 숫자만 있는지 확인 (하이픈 제외)
+            if (!/^\d*$/.test(phoneValue)) {
+                errorMessage.textContent = "전화번호는 숫자만 입력해주세요.";
+                errorMessage.style.display = "inline"; // 오류 메시지 표시
+                return false;
             } else {
-                errorMessage.style.display = "none";  // 오류 메시지 숨김
+                errorMessage.style.display = "none"; // 오류 메시지 숨김
+                return true;
             }
+        }
+
+        // 폼 제출 시 전체 유효성 검사 (선택적)
+        function validateForm() {
+            const isPhoneValid = validatePhoneNumber();
+            // 다른 필요한 검사가 있다면 여기에 추가
+            // 예: if (!isPhoneValid || !isNameValid ...) return false;
+            return isPhoneValid; // 현재는 전화번호 유효성만 검사
         }
     </script>
 </head>
@@ -85,7 +99,7 @@
     <div class="container">
         <h2>{{ time_slot }} 예약하기</h2>
         <p>현재 예약된 인원: {{ current_participants }}/15</p>
-        <form action="/submit_reservation" method="post" onsubmit="return validateForm({{ 15 - current_participants }})">
+        <form action="/submit_reservation" method="post" onsubmit="return validateForm()">
             <input type="hidden" name="time_slot" value="{{ time_slot }}">
             <input type="hidden" name="date" value="{{ date }}">
 
@@ -94,14 +108,24 @@
 
             <label for="participants">참석인원(아이들만):</label>
             <select id="participants" name="participants" required>
-                {% for i in range(1, 16 - current_participants) %}
-                <option value="{{ i }}">{{ i }}명</option>
-                {% endfor %}
+                {# --- 수정된 부분 --- #}
+                {# 최대 예약 가능 인원: 4명 또는 남은 자리 중 더 작은 값 #}
+                {% set max_reservable = [4, 15 - current_participants] | min %}
+                {# max_reservable이 1 이상일 때만 옵션 생성 #}
+                {% if max_reservable >= 1 %}
+                    {% for i in range(1, max_reservable + 1) %}
+                    <option value="{{ i }}">{{ i }}명</option>
+                    {% endfor %}
+                {% else %}
+                    {# 예약 가능한 인원이 없을 경우 (자리가 없거나 계산 오류 시) #}
+                    <option value="" disabled>예약 가능한 인원이 없습니다.</option>
+                {% endif %}
+                {# --- 수정 끝 --- #}
             </select>
 
             <label for="phone">연락처:</label>
             <input type="tel" id="phone" name="phone" required oninput="validatePhoneNumber()">
-            <span id="phone-error">전화번호는 숫자만 입력해주세요</span>
+            <span id="phone-error"></span> {# 오류 메시지 내용 비움 #}
 
             <label for="notice">참고사항:</label>
             <textarea id="notice" name="notice" placeholder="아이들과 관련된 참고사항을 적어주세요."></textarea>
@@ -110,7 +134,7 @@
             <div class="warning-section">
                 <p>1. 외부인도 사용 가능하지만, 선착순 신청을 해야만 이용하는 것은 동일합니다.</p>
                 <p>2. 최대 수용 인원은 15명입니다.</p>
-                <p>3. 부모님과 반드시 동반해야 합니다.<br>* 무료로 운영하고 있기에 키즈존 내에 상주하는 안전요원이 없습니다. 부모님께서 아이들을 계속 지켜보셔야 합니다.</p> 
+                <p>3. 부모님과 반드시 동반해야 합니다.<br>* 무료로 운영하고 있기에 키즈존 내에 상주하는 안전요원이 없습니다. 부모님께서 아이들을 계속 지켜보셔야 합니다.</p>
                 <p>4. 키즈 카페 내 비치된 안전 수칙을 꼭 지켜주세요!</p>
                 <p>5. <strong>당일 예약은 불가능합니다.</strong> 최소 하루 전에 예약해주세요.</p>
                 <p>놀이 시 일어나는 안전사고에 대한 책임은 보호자에게 있으므로 안전하게 놀이할 수 있도록 지도해주시기 바랍니다.</p>
